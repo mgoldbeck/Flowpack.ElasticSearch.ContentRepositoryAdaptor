@@ -23,6 +23,12 @@ use TYPO3\TYPO3CR\Domain\Model\NodeType;
 class ElasticSearchHelper implements ProtectedContextAwareInterface {
 
 	/**
+	 * @var \TYPO3\Flow\Log\SystemLoggerInterface
+	 * @Flow\Inject
+	 */
+	protected $systemLogger;
+
+	/**
 	 * @Flow\Inject
 	 * @var FulltextHelper
 	 */
@@ -127,6 +133,49 @@ class ElasticSearchHelper implements ProtectedContextAwareInterface {
 		}
 
 		return $nodeIdentifiers;
+	}
+
+	/**
+	 * TEST
+	 * Convert an array of nodes to an array of node identifiers
+	 *
+	 * @param array<NodeInterface> $nodes
+	 * @return array
+	 */
+	public function convertArrayOfNodesToFacetGroup($nodes) {
+
+		if (!is_array($nodes) && !$nodes instanceof \Traversable) {
+			return array();
+		}
+		$nodeFacets = array();
+
+		foreach ($nodes as $node) {
+
+			$nodeFacets[] = array(
+				$node->getIdentifier() => array(
+					"identifier" => $node->getIdentifier(),
+					"nodeName" => $node->getName()
+				)
+			);
+
+			/*
+			$nodeFacets = array(
+				"9a765467-3aa8-d515-15ce-9b90cd28a6b3" => array(
+					"identifier" => "9a765467-3aa8-d515-15ce-9b90cd28a6b3",
+					"nodeName" => "Bohren"
+
+				),
+				"3a44ac61-8372-01ba-ff12-39a875cc798f" => array(
+					"identifier" => "3a44ac61-8372-01ba-ff12-39a875cc798f",
+					"nodeName" => "Handrad"
+
+				)
+			);
+			*/
+			$this->systemLogger->log(print_r($nodeFacets));
+		}
+
+		return $nodeFacets;
 	}
 
 	/**
