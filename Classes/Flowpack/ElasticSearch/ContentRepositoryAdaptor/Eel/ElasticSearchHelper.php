@@ -28,6 +28,12 @@ class ElasticSearchHelper implements ProtectedContextAwareInterface {
 	 */
 	protected $systemLogger;
 
+
+	/**
+	 * @var \Flowpack\ElasticSearch\ContentRepositoryAdaptor\LoggerInterface
+	 */
+	protected $logger;
+
 	/**
 	 * @Flow\Inject
 	 * @var FulltextHelper
@@ -154,7 +160,7 @@ class ElasticSearchHelper implements ProtectedContextAwareInterface {
 			$nodeFacets[] = array(
 				$node->getIdentifier() => array(
 					"identifier" => $node->getIdentifier(),
-					"nodeName" => $node->getName()
+					"nodeName" => $node->getProperty('title')
 				)
 			);
 
@@ -172,10 +178,57 @@ class ElasticSearchHelper implements ProtectedContextAwareInterface {
 				)
 			);
 			*/
-			$this->systemLogger->log(print_r($nodeFacets));
+			//$this->systemLogger->log(print_r($nodeFacets));
 		}
 
 		return $nodeFacets;
+	}
+
+	/**
+	 * TEST
+	 * Convert an array of nodes to an array of node identifiers
+	 *
+	 * @param NodeInterface $node
+	 * @param string $facetType
+	 * @return array
+	 */
+	public function convertParentNodeToFacets($node, $facetType = NULL) {
+		$facetGroup = array();
+		$nodeFacets = array();
+
+		$childNodes = $node->getChildNodes($facetType);
+		if (!is_array($childNodes) && !$childNodes instanceof \Traversable) {
+			$this->systemLogger->log('kein Array', LOG_INFO);
+			return array();
+		}
+
+		foreach ($childNodes as $childNode) {
+
+			/*
+			$nodeFacets[] = array(
+				$childNode->getIdentifier() => array(
+					"identifier" => $childNode->getIdentifier(),
+					"nodeName" => $childNode->getName(),
+					"nodeType" => $childNode->getNodeType()->getName()
+				)
+			);
+			*/
+			$nodeFacets[] = array(
+				"identifier" => $childNode->getIdentifier(),
+				"nodeName" => $childNode->getProperty('title'),
+				"nodeType" => $childNode->getNodeType()->getName()
+			);
+		}
+
+		$facetGroup['nodeType'] = $node->getNodeType()->getName();
+		$facetGroup['name'] = $node->getProperty('title');
+		$facetGroup['identifier'] = $node->getIdentifier();
+		$facetGroup['isVisible'] = $node->isVisible();
+		$facetGroup['facets'] = $nodeFacets;
+
+		$this->systemLogger->log(print_r($facetGroup));
+
+		return $facetGroup;
 	}
 
 	/**
